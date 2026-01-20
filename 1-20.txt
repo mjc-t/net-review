@@ -1,0 +1,95 @@
+Routing Protocol 구분
+1) 서브넷마스크 정보
+Classful - RIPv1, IGRP
+Classless
+
+2) AS 내/외
+IGP
+EGP - EGP, BGP
+
+3) 업데이트방법
+Distance Vector
+Link State - ISIS, OSPF
+
+RIP 기본 설정
+router rip
+version 2
+no auto-summary
+network 네트워크
+
+GNS3 설치시 제외(Windows 백신 때문에 에러-> 백신 제거)
+- WireShark
+- Solawinds
+- VPC 
+
+RIP 설정시 에러 이유
+1) 인접 ping 확인 무시
+2) router rip/ver 2/no auto 안함
+3) 로컬 네트워크 광고 부정확
+4) 메이저 네트워크 에러(IP Class 암기 미숙)
+
+AD: 프로토콜간 우선도(작은 값: 우선)
+0          Connected
+1          Static
+90        EIGRP 내부
+110      OSPF
+120      RIP
+170      EIGRP 외부
+
+Metric: 프로토콜 내 최적경로 선택기준
+RIP          Hop Count
+EIGRP     Bandwidth, Delay, Reliability, Load, MTU
+OSPF       Cost
+
+최적경로 우선순위
+1) Longest Match
+ping 1.1.1.1
+routing Table
+1.1.1.0/24 *
+1.1.0.0/16
+2) AD
+routing Table
+1.1.1.0/24(120/5)
+1.1.1.0/24(110/5) *
+3) Metric
+routing Table
+1.1.1.0/24(120/5)
+1.1.1.0/24(120/3) *
+
+Looping
+1. 뺑뺑이
+2. 먼 길 돌아가는 것
+
+
+(RIP) Routing Loop Solution
+1) Split Horizon
+2) Route Poisoning
+3) Poison Reverse
+4) Holddown Time
+5) Maximum Hop Count = 15
+
+
+
+하나의 인터페이스에 여러 주소 입력
+int ...
+ip address 주소 서브넷마스크
+ip address 주소 서브넷마스크 secondary
+
+연습
+R1
+int lo10
+ip add 10.1.1.1 255.255.255.0
+ip add 10.2.2.2 255.255.255.0
+ip add 10.3.3.3 255.255.255.0 se
+ip add 10.4.4.4 255.255.255.0 se
+ip add 10.5.5.5 255.255.255.0 se
+
+sh run int lo10
+
+show ip protocols
+
+[RIP Timers]
+Update          30sec
+Invalid          180sec
+Holddown     180sec
+Flush             240sec
