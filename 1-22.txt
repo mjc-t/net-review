@@ -1,0 +1,136 @@
+ACL 용도
+1) Filtering
+2) 관심 트래픽 정의 = 네트워크 정의
+
+ACL 종류
+이름에 따라
+1) Numbered ACL(번호)              번호
+2) Named ACL(이름)                   문자
+필터링 조건
+1) Standard ACL(표준)                 출발지
+2) Extended ACL (확장)              출발지, 목적지, 프로토콜, 포트번호
+
+ping 목적지주소
+ping 목적지주소 source lo0
+
+ACL 3원칙
+1) 위에서 아래로 적용된다.
+2) 부분 수정은 안된다. (Numbered ACL)
+3) 마지막에는 암시적으로 deny any이다.
+(따라서 ACL이 deny 위주 설정시, 마지막에 permit any가 추가되어야 한다.)
+
+Standard ACL 기본 설정
+access-list 번호 {permit | deny} 출발지네트워크 와일드카드마스크
+
+와일드카드 마스크 <--> 서브넷 마스크
+연속적, 비연속적               연속적
+
+0: 네트워크, 1: 호스트
+0: Check, 1: Ignore
+
+192.168.1.1 0.0.0.0 = host 192.168.1.1
+0.0.0.0 255.255.255.255 = any
+
+<ACL 특성 및 Wildcard Mask>
+[연습] 엔트리 추가/중간 삭제
+access-list 1 per 192.168.1.0 0.0.0.255
+access-list 1 per 192.168.2.0 0.0.0.255
+---
+확인 방법
+sh access-list
+sh ip access-list
+===
+access-list 1 per 192.168.3.0 0.0.0.255
+
+no access-list 번호
+access-list 문제
+1) 192.168.1.1만 허용
+acc 1 permit host 192.168.1.1
+2) 172.16.1.1만 거부
+acc 1 deny host 172.16.1.1
+acc 1 per any
+3) 192.168.1.0/24 네트워크만 허용
+acc 1 per 192.168.1.0 0.0.0.255
+4) 10.0.0.0/8 네트워크만 거부
+acc 1 deny 10.0.0.0 0.255.255.255
+acc 1 per any
+5) 192.168.0.0 - 192.168.7.0/24만 허용
+acc 1 per 192.168.0.0 0.0.7.255
+6) 192.168.8.0 - 192.168.15.0/24만 허용
+acc 1 per 192.168.8.0 0.0.7.255
+7) 172.16.0.0 - 172.16.15.0/24만 거부
+acc 1 deny 172.16.0.0 0.0.15.255
+acc 1 per any
+
+(Port) Filtering
+1) ACL 생성
+2) ACL 적용
+int ...
+ip access-group 번호 {in | out}
+
+ping 목적지주소 source {인터페이스명| 주소}
+
+Named ACL 설정
+ip access-list {standard | extended} 이름
+{per | deny} 출발지네트워크 와일드카드마스크
+
+[Telnet에서의 ACL 설정]
+access-list # per 네트워크 와일드카드마스크
+line vty 0 4
+access-class # {in | out}
+다시한번 실습
+
+[[ACL 학습의 어려움]]
+- ACL(검문) 설정 및 적용한 라우터와 실습하는 라우터가 다르기 때문
+- ACL 적용 인터페이스에 대한 이해가 부족하기 때문(Why 왼쪽 or 오른쪽 인터페이스)
+     Then In으로 고정해서 교육(현장에서는 달라질 수 있다.)
+- 출발지주소 = ping 하는 곳의 인터페이스 주소
+     또는 ping ... source 주소
+- If Not, ACL를 스스로 말하면서 해석할 수 있도록 한다.
+
+
+[Extended ACL 기본 설정]
+access-list 번호 {per | deny} 프로토콜 출발지 WM (연산자) (포트번호) 목적지 WM (연산자) (포트번호)
+
+연산자: eq, neq, lt, gt, range
+
+If deny 설정시, 마지막에 per ip any any 설정해야 한다.
+Port: 서비스 확인 (1-65535. Welknown 1-1023)
+FTP                    TCP 20,21
+SSH                    TCP 22
+TELNET             TCP 23
+HTTP                 TCP 80
+HTTPS            TCP 443
+
+[Prefix List]
+ip prefix-list 이름 (seq #) {permit | deny} 네트워크/프리픽스
+
+acc 1 per 192.168.23.0 0.0.0.255
+ip prefix-list P_192 per 192.168.23.0/24
+
+acc 2 per 172.16.0.0 0.0.255.255
+ip prefix-list P_172 per 172.16.0.0/16
+
+. 와일드 카드마스크가 없다.
+. 부분 수정 가능
+. 포트 필터링이 불가능하다.
+. Named ACL + Standard ACL
+. 출발지만 지정
+
+
+끼워 넣기 seq 번호 (끼워 넣기시 seq 번호를 이용하여 끼워넣는다.)
+
+ip pre P_192 per 192.168.1.0/24
+ip pre P_192 per 192.168.2.0/24
+ip pre P_192 per 192.168.5.0/24
+
+ip pre P_192 seq 12 per 192.168.3.0/24
+삭제:
+no ip prefix-list P_192 per 192.168.2.0/24
+확인 명령어
+sh ip prefix-list
+
+
+
+
+
